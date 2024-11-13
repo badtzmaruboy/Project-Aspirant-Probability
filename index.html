@@ -74,6 +74,7 @@
 <button type="button" onclick="toggleCumulativeProbability()">Cumulative Probability (Land on at least X)</button>
 <button type="button" onclick="rollDiceTenTimes()">Roll Dice 10 Times</button>
 <button type="button" onclick="rollTenOpposedDice()">Roll 10 Opposed Dice</button>
+<button type="button" onclick="calculateOpposedProbability()">Opposed Roll Probability</button>
 
 <p id="demo"></p>
 <p id="opposedResult" style="display:none;"></p>
@@ -229,6 +230,97 @@ function rollTenOpposedDice() {
 
     document.getElementById('opposedResult').innerHTML = results;
     document.getElementById('opposedResult').style.display = "block";
+}
+
+// Probability calculation for opposed rolls with margin details
+function calculateOpposedProbability() {
+    const trials = 10000;
+    const input1 = document.getElementById('diceInput1').value;
+    const input2 = document.getElementById('diceInput2').value;
+    const outcome1 = parseInt(document.getElementById('outcomeInput1').value) || 0;
+    const outcome2 = parseInt(document.getElementById('outcomeInput2').value) || 0;
+
+    let aWins = 0;
+    let bWins = 0;
+    let ties = 0;
+    let totalAMargin = 0;
+    let totalBMargin = 0;
+    let minAMargin = Infinity;
+    let maxAMargin = -Infinity;
+    let minBMargin = Infinity;
+    let maxBMargin = -Infinity;
+
+    // Arrays to track the number of wins by each margin for A and B
+    const aMarginCounts = Array(21).fill(0); // To track margins from 0 to 20
+    const bMarginCounts = Array(21).fill(0);
+
+    for (let i = 0; i < trials; i++) {
+        // Perform each roll
+        const roll1 = parseAndRoll(input1, outcome1);
+        const roll2 = parseAndRoll(input2, outcome2);
+
+        const result1 = extractResultValue(roll1);
+        const result2 = extractResultValue(roll2);
+
+        const margin = Math.abs(result1 - result2);
+
+        // Track outcomes, accumulate margins, and count margin occurrences
+        if (result1 > result2) {
+            aWins++;
+            totalAMargin += margin;
+            minAMargin = Math.min(minAMargin, margin);
+            maxAMargin = Math.max(maxAMargin, margin);
+            if (margin <= 20) aMarginCounts[margin]++;
+        } else if (result2 > result1) {
+            bWins++;
+            totalBMargin += margin;
+            minBMargin = Math.min(minBMargin, margin);
+            maxBMargin = Math.max(maxBMargin, margin);
+            if (margin <= 20) bMarginCounts[margin]++;
+        } else {
+            ties++;
+        }
+    }
+
+    // Calculate probabilities and average margins
+    const aWinProbability = ((aWins / trials) * 100).toFixed(2);
+    const bWinProbability = ((bWins / trials) * 100).toFixed(2);
+    const tieProbability = ((ties / trials) * 100).toFixed(2);
+    const avgAMargin = aWins ? (totalAMargin / aWins).toFixed(2) : 0;
+    const avgBMargin = bWins ? (totalBMargin / bWins).toFixed(2) : 0;
+
+    // Calculate margin probabilities for A and B
+    const aMarginProbabilities = aMarginCounts.map(count => ((count / trials) * 100).toFixed(2));
+    const bMarginProbabilities = bMarginCounts.map(count => ((count / trials) * 100).toFixed(2));
+
+    // Display results with margin details
+    const label1 = extractLabel(input1) || "First Roll";
+    const label2 = extractLabel(input2) || "Second Roll";
+    
+    let aMarginDisplay = "<strong>Margin Probabilities for " + label1 + ":</strong><br>";
+    aMarginProbabilities.forEach((prob, margin) => {
+        if (prob > 0) aMarginDisplay += `Margin ${margin}: ${prob}%<br>`;
+    });
+
+    let bMarginDisplay = "<strong>Margin Probabilities for " + label2 + ":</strong><br>";
+    bMarginProbabilities.forEach((prob, margin) => {
+        if (prob > 0) bMarginDisplay += `Margin ${margin}: ${prob}%<br>`;
+    });
+
+    document.getElementById('probabilityResult').innerHTML = `
+        <strong>Opposed Roll Probability:</strong><br><br>
+        <strong>${label1} Wins:</strong> ${aWinProbability}%<br>
+        - Average Margin: ${avgAMargin}<br>
+        - Min Margin: ${minAMargin === Infinity ? 0 : minAMargin}<br>
+        - Max Margin: ${maxAMargin === -Infinity ? 0 : maxAMargin}<br><br>
+        <strong>${label2} Wins:</strong> ${bWinProbability}%<br>
+        - Average Margin: ${avgBMargin}<br>
+        - Min Margin: ${minBMargin === Infinity ? 0 : minBMargin}<br>
+        - Max Margin: ${maxBMargin === -Infinity ? 0 : maxBMargin}<br><br>
+        <strong>It's a Tie:</strong> ${tieProbability}%<br><br>
+        ${aMarginDisplay}<br>${bMarginDisplay}
+    `;
+    document.getElementById('probabilityResult').style.display = "block";
 }
 
 // Probability-related functions, independent of any other features
