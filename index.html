@@ -293,12 +293,28 @@ function calculateOpposedProbability() {
     
     let aMarginDisplay = `<strong>Probabilities for ${label1}'s Opposed Outcome:</strong><br>`;
     aMarginProbabilities.forEach((prob, margin) => {
-        if (prob > 0) aMarginDisplay += `Opposed Outcome ${margin}: ${prob}%<br>`;
+        if (prob > 0) {
+            aMarginDisplay += `
+                <div style="display: flex; align-items: center;">
+                    <span style="width: 50px; text-align: right;">${margin}:</span> 
+                    <div style="background-color: #4682b4; height: 10px; width: ${prob * 3}px; margin-left: 10px;"></div>
+                    <span style="margin-left: 10px;">${prob}%</span>
+                </div>
+            `;
+        }
     });
 
     let bMarginDisplay = `<strong>Probabilities for ${label2}'s Opposed Outcome:</strong><br>`;
     bMarginProbabilities.forEach((prob, margin) => {
-        if (prob > 0) bMarginDisplay += `Opposed Outcome ${margin}: ${prob}%<br>`;
+        if (prob > 0) {
+            bMarginDisplay += `
+                <div style="display: flex; align-items: center;">
+                    <span style="width: 50px; text-align: right;">${margin}:</span> 
+                    <div style="background-color: #1e90ff; height: 10px; width: ${prob * 3}px; margin-left: 10px;"></div>
+                    <span style="margin-left: 10px;">${prob}%</span>
+                </div>
+            `;
+        }
     });
 
     document.getElementById('probabilityResult').innerHTML = `
@@ -369,32 +385,65 @@ function simulateCumulativeOutcomeProbabilities(numDice, difficulty) {
     return cumulativeCounts;
 }
 
-// Simulate a single roll without dependence on any other code
+// Simulate a single roll with system rules for Exploding or +2
 function simulateSingleRoll(numDice, difficulty) {
     let tally = 0;
+    const system = document.getElementById('system').value; // Check selected system
+
     for (let i = 0; i < numDice; i++) {
-        let roll = Math.floor(Math.random() * 10) + 1;
+        let roll = Math.floor(Math.random() * 10) + 1; // Roll a d10 (1-10)
+        
         if (roll >= difficulty && roll < 10) {
+            // Regular success if roll meets difficulty and is not a 10
             tally += 1;
         } else if (roll === 10) {
-            tally += 2;
+            if (system === "exploding") {
+                // Exploding system: count as a success and roll one additional die
+                tally += 1;
+                let extraRoll = Math.floor(Math.random() * 10) + 1;
+                
+                // If the extra roll meets the difficulty threshold, add another success
+                if (extraRoll >= difficulty) {
+                    tally += 1;
+                }
+            } else if (system === "+2") {
+                // +2 system: count a roll of 10 as two successes
+                tally += 2;
+            }
         } else if (roll === 1) {
+            // Roll of 1 decreases tally
             tally -= 1;
         }
     }
     return tally;
 }
 
-// Display probability results
+// Helper function to round probabilities based on specified rules
+function conditionalRound(probability) {
+    if (probability > 25) {
+        return Math.round(probability / 2.5) * 2.5;
+    } else if (probability > 10) {
+        return Math.round(probability);
+    } else if (probability > 1) {
+        return Math.round(probability * 2) / 2;
+    } else {
+        return probability.toFixed(2); // Keep two decimal places for probabilities <= 1%
+    }
+}
+
+// Display probability results with conditional rounding
 function displayProbabilityResults(probabilities, title) {
     let result = `<strong>${title}:</strong><br>`;
     const sortedKeys = Object.keys(probabilities).map(Number).sort((a, b) => a - b);
+
     for (const key of sortedKeys) {
-        const percentage = probabilities[key];
+        const rawPercentage = parseFloat(probabilities[key]);
+        const roundedPercentage = conditionalRound(rawPercentage); // Apply conditional rounding
+
         result += `<div style="display: flex; align-items: center;">
                         <span style="width: 30px; text-align: right;">${key}:</span> 
-                        <div style="background-color: #1e90ff; height: 10px; width: ${percentage * 3}px; margin-left: 10px;"></div>
-                        <span style="margin-left: 10px;">${percentage}%</span>
+                        <div style="background-color: #1e90ff; height: 10px; width: ${roundedPercentage * 3}px; margin-left: 10px;"></div>
+                        <span style="margin-left: 10px;">${roundedPercentage}%</span>
                    </div>`;
     }
     document.getElementById("probabilityResult").innerHTML = result;
@@ -404,21 +453,49 @@ function displayProbabilityResults(probabilities, title) {
 function rollDice(numDice, floor, outcome, weaponDamage, label) {
     let results = [];
     let tally = 0;
+    const system = document.getElementById('system').value; // Check the selected system
 
     for (let i = 0; i < numDice; i++) {
-        let roll = Math.floor(Math.random() * 10) + 1;
+        let roll = Math.floor(Math.random() * 10) + 1; // Roll a d10 (1-10)
+
         if (roll >= floor && roll < 10) {
+            // Regular success if roll meets difficulty and is not a 10
             tally += 1;
+            results.push(roll); // Add regular roll to results
         } else if (roll === 10) {
-            tally += 2;
+            if (system === "exploding") {
+                // "Exploding" system: count as a success and roll one extra die
+                tally += 1;
+                
+                // Roll an additional die for explosion
+                let extraRoll = Math.floor(Math.random() * 10) + 1;
+
+                // Format result as "10 (extraRoll)" and push to results array
+                if (extraRoll >= floor) {
+                    results.push(`10 (${extraRoll})`);
+                    tally += 1; // Add success for the extra roll if it meets the difficulty
+                } else {
+                    results.push(`10 (${extraRoll})`); // Display the explosion result even if it doesn't meet difficulty
+                }
+            } else if (system === "+2") {
+                // "+2 for 10s" system: count as two successes
+                tally += 2;
+                results.push("10"); // Display regular 10 without explosion
+            }
         } else if (roll === 1) {
+            // Roll of 1 decreases tally
             tally -= 1;
+            results.push(roll); // Add roll of 1 to results
+        } else {
+            // Add any other roll to results
+            results.push(roll);
         }
-        results.push(roll);
     }
 
+    // Calculate the final result including any outcome modifiers
     const resultWithOutcome = tally + outcome;
 
+    // Display the results with the label if provided
     return `${label ? `<strong>${label}</strong><br>` : ''}Rolls: ${results.join(", ")} <br> Result: ${resultWithOutcome} (${tally} + ${outcome})`;
 }
 
