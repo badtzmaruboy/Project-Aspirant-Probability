@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+    /* Set the background color and font color */
+    body {
+        background-color: #1a1a1a; /* Dark background */
+        color: #b0e0e6; /* Cool light blue font */
+        font-family: Arial, sans-serif;
+    }
+
+    /* Style for buttons */
+    button {
+        background-color: #1e90ff; /* Dodger blue */
+        color: #ffffff;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        margin: 5px;
+    }
+
+    /* Change button color on hover */
+    button:hover {
+        background-color: #4682b4; /* Steel blue */
+    }
+
+    /* Style for the input field */
+    input[type="text"] {
+        padding: 8px;
+        border: 1px solid #4682b4;
+        border-radius: 5px;
+        color: #b0e0e6;
+        background-color: #333333;
+        font-size: 16px;
+        width: 200px;
+    }
+
+    /* Style for the result text */
+    #demo, #probabilityResult {
+        margin-top: 20px;
+        font-size: 18px;
+        line-height: 1.5;
+        color: #87cefa; /* Light sky blue */
+    }
+</style>
+</head>
+
+<body>
+
+<h2>Dice Bot with +2 and Exploding Systems</h2>
+<label for="diceInput">Enter Dice Roll Command:</label>
+<input type="text" id="diceInput" placeholder="e.g., 7@6" />
+<br><br>
+
+<label for="system">Choose System:</label>
+<select id="system">
+    <option value="exploding">Exploding</option>
+    <option value="+2">+2 for 10s</option>
+</select>
+<br><br>
+
+<button type="button" onclick="document.getElementById('demo').innerHTML = parseAndRoll(document.getElementById('diceInput').value)">
+Roll the Dice</button>
+<button type="button" onclick="printMultipleRolls(10)">
+Roll 10 Times</button>
+<button type="button" onclick="calculateExactProbability()">
+Exact Outcome Probability (Bell Curve)</button>
+<button type="button" onclick="calculateCumulativeProbability()">
+Cumulative Probability (Land on at least X)</button>
+
+<p id="demo"></p>
+<p id="probabilityResult"></p>
+
+<script>
+// Function to parse and roll based on the chosen system
+function parseAndRoll(input) {
+    let [dicePart, ...labelParts] = input.split(' ');
+    let label = labelParts.join(' ') || "";
+    let [numDiceStr, difficultyStr] = dicePart.split('@');
+    
+    let numDice = parseInt(numDiceStr) || 1;
+    let difficulty = difficultyStr ? parseInt(difficultyStr) : 6;
+    let exert = /ex/i.test(label);
+    if (exert) label = label.replace(/ex/gi, "").trim();
+    
+    let diceReductionNote = "";
+    if (difficulty > 9) {
+        let excessDifficulty = difficulty - 9;
+        numDice = Math.max(1, numDice - excessDifficulty);
+        diceReductionNote = ` (Challenge set to 9 with -${excessDifficulty} Dice)`;
+        difficulty = 9;
+    }
+
+    // Choose system based on dropdown selection
+    let system = document.getElementById("system").value;
+    if (system === "exploding") {
+        return rollDiceExploding(numDice, difficulty, exert, label, diceReductionNote);
+    } else {
+        return rollDicePlusTwo(numDice, difficulty, exert, label, diceReductionNote);
+    }
+}
+
+// Function to roll multiple sets of dice
+function printMultipleRolls(times) {
+    let input = document.getElementById('diceInput').value;
+    let results = [];
+    for (let i = 0; i < times; i++) {
+        results.push(parseAndRoll(input));
+    }
+    document.getElementById('demo').innerHTML = results.join("<br><br>");
+}
+
+// Exploding system: roll dice with exploding 10s
+function rollDiceExploding(numDice, floor, exert, label, diceReductionNote) {
+    let results = [];
+    let tally = 0;
+
+    for (let i = 0; i < numDice; i++) {
+        let roll = Math.floor(Math.random() * 10) + 1;
+        let rollDisplay = roll;
+
+        if (roll >= floor && roll < 10) {
+            tally += 1;
+        } else if (roll === 10) {
+            tally += 1;
+            let extraRoll = Math.floor(Math.random() * 10) + 1;
+            rollDisplay += `(${extraRoll})`; // Show single explosion
+            if (extraRoll >= floor) {
+                tally += 1;
+            }
+        } else if (roll === 1) {
+            tally -= 1;
+        }
+        results.push(rollDisplay);
+    }
+
+    if (exert) {
+        tally += 1;
+        label += " (Exerted)";
+    }
+
+    return `${label ? label : ''} [Dice Results: ${results.join(", ")}] <br> Challenge: ${floor}${diceReductionNote} <br> Result: ${tally}`;
+}
+
+// +2 system: each roll of 10 adds +2 directly
+function rollDicePlusTwo(numDice, floor, exert, label, diceReductionNote) {
+    let results = [];
+    let tally = 0;
+
+    for (let i = 0; i < numDice; i++) {
+        let roll = Math.floor(Math.random() * 10) + 1;
+        let rollDisplay = roll;
+
+        if (roll >= floor && roll < 10) {
+            tally += 1;
+        } else if (roll === 10) {
+            tally += 2; // Each 10 adds +2 in the +2 system
+        } else if (roll === 1) {
+            tally -= 1;
+        }
+        results.push(rollDisplay);
+    }
+
+    if (exert) {
+        tally += 1;
+        label += " (Exerted)";
+    }
+
+    return `${label ? label : ''} [Dice Results: ${results.join(", ")}] <br> Challenge: ${floor}${diceReductionNote} <br> Result: ${tally}`;
+}
+
+// Rounds a number to the nearest 2.5%
+function roundToNearestTwoPointFive(value) {
+    return Math.round(value * 40) / 40;
+}
+
+// Simulate exact outcome probabilities by running 10,000 trials and rounding results
+function simulateExactOutcomeProbabilities(numDice, difficulty) {
+    const trials = 10000;
+    const outcomes = {};
+
+    for (let i = 0; i < trials; i++) {
+        let outcome = parseInt(parseAndRoll(`${numDice}@${difficulty}`).match(/Result: (-?\d+)/)[1]);
+
+        if (outcomes[outcome] === undefined) {
+            outcomes[outcome] = 0;
+        }
+        outcomes[outcome]++;
+    }
+
+    // Convert counts to probabilities and round to nearest 2.5%
+    for (let outcome in outcomes) {
+        outcomes[outcome] = roundToNearestTwoPointFive(outcomes[outcome] / trials);
+    }
+
+    return outcomes;
+}
+
+// Calculate and display exact outcome probabilities with rounding
+function calculateExactProbability() {
+    const input = document.getElementById('diceInput').value;
+    let [dicePart, difficultyStr] = input.split('@');
+    
+    let numDice = parseInt(dicePart) || 1;
+    let difficulty = difficultyStr ? parseInt(difficultyStr) : 6;
+
+    if (difficulty > 9) {
+        let excessDifficulty = difficulty - 9;
+        numDice = Math.max(1, numDice - excessDifficulty);
+        difficulty = 9;
+    }
+
+    const outcomeProbabilities = simulateExactOutcomeProbabilities(numDice, difficulty);
+    displayExactOutcomeResults(outcomeProbabilities);
+}
+
+// Simulate cumulative probabilities by running 10,000 trials and rounding results
+function simulateCumulativeOutcomeProbabilities(numDice, difficulty) {
+    const trials = 10000;
+    const cumulativeCounts = {};
+
+    for (let i = 0; i < trials; i++) {
+        let outcome = parseInt(parseAndRoll(`${numDice}@${difficulty}`).match(/Result: (-?\d+)/)[1]);
+        
+        for (let target = outcome; target >= -5; target--) {
+            if (cumulativeCounts[target] === undefined) {
+                cumulativeCounts[target] = 0;
+            }
+            cumulativeCounts[target]++;
+        }
+    }
+
+    // Convert counts to cumulative probabilities and round to nearest 2.5%
+    for (let target in cumulativeCounts) {
+        cumulativeCounts[target] = roundToNearestTwoPointFive(cumulativeCounts[target] / trials);
+    }
+
+    return cumulativeCounts;
+}
+
+// Calculate and display cumulative probability with rounding
+function calculateCumulativeProbability() {
+    const input = document.getElementById('diceInput').value;
+    let [dicePart, difficultyStr] = input.split('@');
+    
+    let numDice = parseInt(dicePart) || 1;
+    let difficulty = difficultyStr ? parseInt(difficultyStr) : 6;
+
+    if (difficulty > 9) {
+        let excessDifficulty = difficulty - 9;
+        numDice = Math.max(1, numDice - excessDifficulty);
+        difficulty = 9;
+    }
+
+    const cumulativeProbabilities = simulateCumulativeOutcomeProbabilities(numDice, difficulty);
+    displayCumulativeOutcomeResults(cumulativeProbabilities);
+}
+
+// Display the exact outcome probabilities as a bell curve
+function displayExactOutcomeResults(outcomeProbabilities) {
+    let result = `<strong>Exact Outcome Probability Distribution (Bell Curve):</strong><br>`;
+    
+    const sortedOutcomes = Object.keys(outcomeProbabilities).map(Number).sort((a, b) => a - b);
+    
+    for (let outcome of sortedOutcomes) {
+        let percentage = (outcomeProbabilities[outcome] * 100).toFixed(2);
+        result += `<div style="display: flex; align-items: center;">
+                    <span style="width: 30px; text-align: right;">${outcome}:</span> 
+                    ${createBar(percentage)} ${percentage}%</div>`;
+    }
+    
+    document.getElementById("probabilityResult").innerHTML = result;
+}
+
+// Display cumulative probabilities as a bar graph
+function displayCumulativeOutcomeResults(cumulativeProbabilities) {
+    let result = `<strong>Cumulative Probability Distribution (At least X Outcome):</strong><br>`;
+    
+    const sortedTargets = Object.keys(cumulativeProbabilities).map(Number).sort((a, b) => a - b);
+    
+    for (let target of sortedTargets) {
+        let percentage = (cumulativeProbabilities[target] * 100).toFixed(2);
+        result += `<div style="display: flex; align-items: center;">
+                    <span style="width: 30px; text-align: right;">${target}:</span> 
+                    ${createBar(percentage)} ${percentage}%</div>`;
+    }
+    
+    document.getElementById("probabilityResult").innerHTML = result;
+}
+
+// Create a horizontal bar for each probability
+function createBar(percentage) {
+    const barLength = Math.round(percentage / 5);
+    return `<span style="display: inline-block; background-color: #1e90ff; width: ${barLength * 10}px; height: 10px; margin-left: 5px;"></span>`;
+}
+</script>
+
+</body>
+</html>
