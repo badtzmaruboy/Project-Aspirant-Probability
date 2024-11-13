@@ -250,12 +250,10 @@ function calculateOpposedProbability() {
     let minBMargin = Infinity;
     let maxBMargin = -Infinity;
 
-    // Arrays to track the number of wins by each margin for A and B
     const aMarginCounts = Array(21).fill(0); // To track margins from 0 to 20
     const bMarginCounts = Array(21).fill(0);
 
     for (let i = 0; i < trials; i++) {
-        // Perform each roll
         const roll1 = parseAndRoll(input1, outcome1);
         const roll2 = parseAndRoll(input2, outcome2);
 
@@ -264,7 +262,6 @@ function calculateOpposedProbability() {
 
         const margin = Math.abs(result1 - result2);
 
-        // Track outcomes, accumulate margins, and count margin occurrences
         if (result1 > result2) {
             aWins++;
             totalAMargin += margin;
@@ -282,41 +279,38 @@ function calculateOpposedProbability() {
         }
     }
 
-    // Calculate probabilities and average margins
     const aWinProbability = ((aWins / trials) * 100).toFixed(2);
     const bWinProbability = ((bWins / trials) * 100).toFixed(2);
     const tieProbability = ((ties / trials) * 100).toFixed(2);
     const avgAMargin = aWins ? (totalAMargin / aWins).toFixed(2) : 0;
     const avgBMargin = bWins ? (totalBMargin / bWins).toFixed(2) : 0;
 
-    // Calculate margin probabilities for A and B
     const aMarginProbabilities = aMarginCounts.map(count => ((count / trials) * 100).toFixed(2));
     const bMarginProbabilities = bMarginCounts.map(count => ((count / trials) * 100).toFixed(2));
 
-    // Display results with margin details
     const label1 = extractLabel(input1) || "First Roll";
     const label2 = extractLabel(input2) || "Second Roll";
     
-    let aMarginDisplay = "<strong>Margin Probabilities for " + label1 + ":</strong><br>";
+    let aMarginDisplay = `<strong>Probabilities for ${label1}'s Opposed Outcome:</strong><br>`;
     aMarginProbabilities.forEach((prob, margin) => {
-        if (prob > 0) aMarginDisplay += `Margin ${margin}: ${prob}%<br>`;
+        if (prob > 0) aMarginDisplay += `Opposed Outcome ${margin}: ${prob}%<br>`;
     });
 
-    let bMarginDisplay = "<strong>Margin Probabilities for " + label2 + ":</strong><br>";
+    let bMarginDisplay = `<strong>Probabilities for ${label2}'s Opposed Outcome:</strong><br>`;
     bMarginProbabilities.forEach((prob, margin) => {
-        if (prob > 0) bMarginDisplay += `Margin ${margin}: ${prob}%<br>`;
+        if (prob > 0) bMarginDisplay += `Opposed Outcome ${margin}: ${prob}%<br>`;
     });
 
     document.getElementById('probabilityResult').innerHTML = `
         <strong>Opposed Roll Probability:</strong><br><br>
         <strong>${label1} Wins:</strong> ${aWinProbability}%<br>
         - Average Margin: ${avgAMargin}<br>
-        - Min Margin: ${minAMargin === Infinity ? 0 : minAMargin}<br>
-        - Max Margin: ${maxAMargin === -Infinity ? 0 : maxAMargin}<br><br>
+        - Min Opposed Outcome: ${minAMargin === Infinity ? 0 : minAMargin}<br>
+        - Max Opposed Outcome: ${maxAMargin === -Infinity ? 0 : maxAMargin}<br><br>
         <strong>${label2} Wins:</strong> ${bWinProbability}%<br>
         - Average Margin: ${avgBMargin}<br>
-        - Min Margin: ${minBMargin === Infinity ? 0 : minBMargin}<br>
-        - Max Margin: ${maxBMargin === -Infinity ? 0 : maxBMargin}<br><br>
+        - Min Opposed Outcome: ${minBMargin === Infinity ? 0 : minBMargin}<br>
+        - Max Opposed Outcome: ${maxBMargin === -Infinity ? 0 : maxBMargin}<br><br>
         <strong>It's a Tie:</strong> ${tieProbability}%<br><br>
         ${aMarginDisplay}<br>${bMarginDisplay}
     `;
