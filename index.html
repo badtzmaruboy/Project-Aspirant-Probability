@@ -26,7 +26,7 @@
         background-color: #4682b4; /* Steel blue */
     }
 
-    /* Style for the input field */
+    /* Style for the input fields */
     input[type="text"] {
         padding: 8px;
         border: 1px solid #4682b4;
@@ -35,10 +35,11 @@
         background-color: #333333;
         font-size: 16px;
         width: 200px;
+        margin: 5px;
     }
 
     /* Style for the result text */
-    #demo, #probabilityResult {
+    #demo, #opposedResult, #probabilityResult, #exactProbabilityResult, #cumulativeProbabilityResult {
         margin-top: 20px;
         font-size: 18px;
         line-height: 1.5;
@@ -50,8 +51,12 @@
 <body>
 
 <h2>Dice Bot with +2 and Exploding Systems</h2>
-<label for="diceInput">Enter Dice Roll Command:</label>
-<input type="text" id="diceInput" placeholder="e.g., 7@6" />
+<label for="diceInput1">Enter First Roll Command:</label>
+<input type="text" id="diceInput1" placeholder="e.g., 7@6" />
+<br><br>
+
+<label for="diceInput2">Enter Second Roll Command (for Opposed Rolls):</label>
+<input type="text" id="diceInput2" placeholder="e.g., 5@7" />
 <br><br>
 
 <label for="system">Choose System:</label>
@@ -61,19 +66,32 @@
 </select>
 <br><br>
 
-<button type="button" onclick="document.getElementById('demo').innerHTML = parseAndRoll(document.getElementById('diceInput').value)">
+<button type="button" onclick="regularRoll()">
 Roll the Dice</button>
 <button type="button" onclick="printMultipleRolls(10)">
 Roll 10 Times</button>
-<button type="button" onclick="calculateExactProbability()">
+<button type="button" onclick="opposedRoll()">
+Opposed Roll</button>
+<button type="button" onclick="toggleExactProbability()">
 Exact Outcome Probability (Bell Curve)</button>
-<button type="button" onclick="calculateCumulativeProbability()">
+<button type="button" onclick="toggleCumulativeProbability()">
 Cumulative Probability (Land on at least X)</button>
+<button type="button" onclick="toggleProbabilityForOpposed()">
+Probability for Opposed Roll</button>
 
 <p id="demo"></p>
-<p id="probabilityResult"></p>
+<p id="opposedResult" style="display:none;"></p>
+<p id="exactProbabilityResult" style="display:none;"></p>
+<p id="cumulativeProbabilityResult" style="display:none;"></p>
+<p id="probabilityResult" style="display:none;"></p>
 
 <script>
+// Function for regular roll (hides opposed result)
+function regularRoll() {
+    document.getElementById('opposedResult').style.display = "none";
+    document.getElementById('demo').innerHTML = parseAndRoll(document.getElementById('diceInput1').value);
+}
+
 // Function to parse and roll based on the chosen system
 function parseAndRoll(input) {
     let [dicePart, ...labelParts] = input.split(' ');
@@ -104,12 +122,121 @@ function parseAndRoll(input) {
 
 // Function to roll multiple sets of dice
 function printMultipleRolls(times) {
-    let input = document.getElementById('diceInput').value;
+    document.getElementById('opposedResult').style.display = "none"; // Hide opposed result
+    let input = document.getElementById('diceInput1').value;
     let results = [];
     for (let i = 0; i < times; i++) {
         results.push(parseAndRoll(input));
     }
     document.getElementById('demo').innerHTML = results.join("<br><br>");
+}
+
+// Opposed Roll function with two different inputs
+function opposedRoll() {
+    const input1 = document.getElementById('diceInput1').value;
+    const input2 = document.getElementById('diceInput2').value;
+    let roll1 = parseAndRoll(input1);
+    let roll2 = parseAndRoll(input2);
+
+    // Extract results from each roll
+    let result1 = parseInt(roll1.match(/Result: (-?\d+)/)[1]);
+    let result2 = parseInt(roll2.match(/Result: (-?\d+)/)[1]);
+    let opposedResult = result1 - result2;
+
+    // Display both rolls and the opposed result
+    document.getElementById('opposedResult').innerHTML = `
+        <strong>First Roll:</strong> ${roll1} <br>
+        <strong>Second Roll:</strong> ${roll2} <br>
+        <strong>Opposed Result:</strong> ${result1} - ${result2} = ${opposedResult}
+    `;
+    document.getElementById('opposedResult').style.display = "block";
+}
+
+// Toggle display of Exact Probability
+function toggleExactProbability() {
+    const probabilityElement = document.getElementById("exactProbabilityResult");
+    document.getElementById('opposedResult').style.display = "none"; // Hide opposed result
+    if (probabilityElement.style.display === "none") {
+        calculateExactProbability();
+        probabilityElement.style.display = "block";
+    } else {
+        probabilityElement.style.display = "none";
+    }
+}
+
+// Toggle display of Cumulative Probability
+function toggleCumulativeProbability() {
+    const probabilityElement = document.getElementById("cumulativeProbabilityResult");
+    document.getElementById('opposedResult').style.display = "none"; // Hide opposed result
+    if (probabilityElement.style.display === "none") {
+        calculateCumulativeProbability();
+        probabilityElement.style.display = "block";
+    } else {
+        probabilityElement.style.display = "none";
+    }
+}
+
+// Toggle probability for opposed roll
+function toggleProbabilityForOpposed() {
+    const probabilityElement = document.getElementById("probabilityResult");
+    const input1 = document.getElementById('diceInput1').value;
+    const input2 = document.getElementById('diceInput2').value;
+
+    if (probabilityElement.style.display === "none") {
+        calculateProbabilityForOpposed(input1, input2);
+        probabilityElement.style.display = "block";
+    } else {
+        probabilityElement.style.display = "none";
+    }
+}
+
+// Function to simulate probability for opposed roll
+function calculateProbabilityForOpposed(input1, input2) {
+    const trials = 10000;
+    let winA = 0;
+    let winB = 0;
+    let draws = 0;
+    let winMarginA = {};
+    let winMarginB = {};
+
+    for (let i = 0; i < trials; i++) {
+        let result1 = parseInt(parseAndRoll(input1).match(/Result: (-?\d+)/)[1]);
+        let result2 = parseInt(parseAndRoll(input2).match(/Result: (-?\d+)/)[1]);
+        let margin = Math.abs(result1 - result2);
+
+        if (result1 > result2) {
+            winA++;
+            winMarginA[margin] = (winMarginA[margin] || 0) + 1;
+        } else if (result1 < result2) {
+            winB++;
+            winMarginB[margin] = (winMarginB[margin] || 0) + 1;
+        } else {
+            draws++;
+        }
+    }
+
+    const winAProb = ((winA / trials) * 100).toFixed(2);
+    const winBProb = ((winB / trials) * 100).toFixed(2);
+    const drawProb = ((draws / trials) * 100).toFixed(2);
+
+    let result = `<strong>Probability of Opposed Results:</strong><br>`;
+    result += `Roll A wins: ${winAProb}% <br>`;
+    result += `Roll B wins: ${winBProb}% <br>`;
+    result += `Draws: ${drawProb}% <br><br>`;
+
+    result += `<strong>Win Margin Distribution for Roll A:</strong><br>`;
+    for (let margin in winMarginA) {
+        let percentage = ((winMarginA[margin] / winA) * 100).toFixed(2);
+        result += `Margin ${margin}: ${percentage}%<br>`;
+    }
+
+    result += `<br><strong>Win Margin Distribution for Roll B:</strong><br>`;
+    for (let margin in winMarginB) {
+        let percentage = ((winMarginB[margin] / winB) * 100).toFixed(2);
+        result += `Margin ${margin}: ${percentage}%<br>`;
+    }
+
+    document.getElementById("probabilityResult").innerHTML = result;
 }
 
 // Exploding system: roll dice with exploding 10s
@@ -169,131 +296,6 @@ function rollDicePlusTwo(numDice, floor, exert, label, diceReductionNote) {
     }
 
     return `${label ? label : ''} [Dice Results: ${results.join(", ")}] <br> Challenge: ${floor}${diceReductionNote} <br> Result: ${tally}`;
-}
-
-// Rounds a number to the nearest 2.5%
-function roundToNearestTwoPointFive(value) {
-    return Math.round(value * 40) / 40;
-}
-
-// Simulate exact outcome probabilities by running 10,000 trials and rounding results
-function simulateExactOutcomeProbabilities(numDice, difficulty) {
-    const trials = 10000;
-    const outcomes = {};
-
-    for (let i = 0; i < trials; i++) {
-        let outcome = parseInt(parseAndRoll(`${numDice}@${difficulty}`).match(/Result: (-?\d+)/)[1]);
-
-        if (outcomes[outcome] === undefined) {
-            outcomes[outcome] = 0;
-        }
-        outcomes[outcome]++;
-    }
-
-    // Convert counts to probabilities and round to nearest 2.5%
-    for (let outcome in outcomes) {
-        outcomes[outcome] = roundToNearestTwoPointFive(outcomes[outcome] / trials);
-    }
-
-    return outcomes;
-}
-
-// Calculate and display exact outcome probabilities with rounding
-function calculateExactProbability() {
-    const input = document.getElementById('diceInput').value;
-    let [dicePart, difficultyStr] = input.split('@');
-    
-    let numDice = parseInt(dicePart) || 1;
-    let difficulty = difficultyStr ? parseInt(difficultyStr) : 6;
-
-    if (difficulty > 9) {
-        let excessDifficulty = difficulty - 9;
-        numDice = Math.max(1, numDice - excessDifficulty);
-        difficulty = 9;
-    }
-
-    const outcomeProbabilities = simulateExactOutcomeProbabilities(numDice, difficulty);
-    displayExactOutcomeResults(outcomeProbabilities);
-}
-
-// Simulate cumulative probabilities by running 10,000 trials and rounding results
-function simulateCumulativeOutcomeProbabilities(numDice, difficulty) {
-    const trials = 10000;
-    const cumulativeCounts = {};
-
-    for (let i = 0; i < trials; i++) {
-        let outcome = parseInt(parseAndRoll(`${numDice}@${difficulty}`).match(/Result: (-?\d+)/)[1]);
-        
-        for (let target = outcome; target >= -5; target--) {
-            if (cumulativeCounts[target] === undefined) {
-                cumulativeCounts[target] = 0;
-            }
-            cumulativeCounts[target]++;
-        }
-    }
-
-    // Convert counts to cumulative probabilities and round to nearest 2.5%
-    for (let target in cumulativeCounts) {
-        cumulativeCounts[target] = roundToNearestTwoPointFive(cumulativeCounts[target] / trials);
-    }
-
-    return cumulativeCounts;
-}
-
-// Calculate and display cumulative probability with rounding
-function calculateCumulativeProbability() {
-    const input = document.getElementById('diceInput').value;
-    let [dicePart, difficultyStr] = input.split('@');
-    
-    let numDice = parseInt(dicePart) || 1;
-    let difficulty = difficultyStr ? parseInt(difficultyStr) : 6;
-
-    if (difficulty > 9) {
-        let excessDifficulty = difficulty - 9;
-        numDice = Math.max(1, numDice - excessDifficulty);
-        difficulty = 9;
-    }
-
-    const cumulativeProbabilities = simulateCumulativeOutcomeProbabilities(numDice, difficulty);
-    displayCumulativeOutcomeResults(cumulativeProbabilities);
-}
-
-// Display the exact outcome probabilities as a bell curve
-function displayExactOutcomeResults(outcomeProbabilities) {
-    let result = `<strong>Exact Outcome Probability Distribution (Bell Curve):</strong><br>`;
-    
-    const sortedOutcomes = Object.keys(outcomeProbabilities).map(Number).sort((a, b) => a - b);
-    
-    for (let outcome of sortedOutcomes) {
-        let percentage = (outcomeProbabilities[outcome] * 100).toFixed(2);
-        result += `<div style="display: flex; align-items: center;">
-                    <span style="width: 30px; text-align: right;">${outcome}:</span> 
-                    ${createBar(percentage)} ${percentage}%</div>`;
-    }
-    
-    document.getElementById("probabilityResult").innerHTML = result;
-}
-
-// Display cumulative probabilities as a bar graph
-function displayCumulativeOutcomeResults(cumulativeProbabilities) {
-    let result = `<strong>Cumulative Probability Distribution (At least X Outcome):</strong><br>`;
-    
-    const sortedTargets = Object.keys(cumulativeProbabilities).map(Number).sort((a, b) => a - b);
-    
-    for (let target of sortedTargets) {
-        let percentage = (cumulativeProbabilities[target] * 100).toFixed(2);
-        result += `<div style="display: flex; align-items: center;">
-                    <span style="width: 30px; text-align: right;">${target}:</span> 
-                    ${createBar(percentage)} ${percentage}%</div>`;
-    }
-    
-    document.getElementById("probabilityResult").innerHTML = result;
-}
-
-// Create a horizontal bar for each probability
-function createBar(percentage) {
-    const barLength = Math.round(percentage / 5);
-    return `<span style="display: inline-block; background-color: #1e90ff; width: ${barLength * 10}px; height: 10px; margin-left: 5px;"></span>`;
 }
 </script>
 
