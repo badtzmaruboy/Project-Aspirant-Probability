@@ -72,6 +72,7 @@
 <button type="button" onclick="opposedRoll()">Opposed Roll</button>
 <button type="button" onclick="toggleExactProbability()">Exact Outcome Probability (Bell Curve)</button>
 <button type="button" onclick="toggleCumulativeProbability()">Cumulative Probability (Land on at least X)</button>
+<button type="button" onclick="rollDiceTenTimes()">Roll Dice 10 Times</button>
 
 <p id="demo"></p>
 <p id="opposedResult" style="display:none;"></p>
@@ -158,6 +159,26 @@ function opposedRoll() {
         <strong>${winnerMessage}</strong>
     `;
     document.getElementById('opposedResult').style.display = "block";
+}
+
+// Function to roll the dice 10 times
+function rollDiceTenTimes() {
+    document.getElementById('opposedResult').style.display = "none";
+    let results = "";  // Initialize an empty string to store results for each roll
+    
+    // Perform 10 rolls
+    for (let i = 0; i < 10; i++) {
+        const resultText = parseAndRoll(
+            document.getElementById('diceInput1').value,
+            document.getElementById('outcomeInput1').value,
+            document.getElementById('damageInput1').value,
+            true
+        );
+        results += `<strong>Roll ${i + 1}:</strong> ${resultText}<br><br>`;
+    }
+    
+    // Display all 10 roll results
+    document.getElementById('demo').innerHTML = results;
 }
 
 // Probability-related functions, independent of any other features
