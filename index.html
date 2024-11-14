@@ -76,11 +76,23 @@
 <button type="button" onclick="rollTenOpposedDice()">Roll 10 Opposed Dice</button>
 <button type="button" onclick="calculateOpposedProbability()">Opposed Roll Probability</button>
 
+<!-- New "Clear Results" button -->
+<button type="button" onclick="clearResults()">Clear Results</button>
+
 <p id="demo"></p>
 <p id="opposedResult" style="display:none;"></p>
 <p id="probabilityResult" style="display:none;"></p>
 
 <script>
+// Function to clear all result displays and reset to default
+function clearResults() {
+    document.getElementById('demo').innerHTML = '';
+    document.getElementById('opposedResult').innerHTML = '';
+    document.getElementById('probabilityResult').innerHTML = '';
+    document.getElementById('opposedResult').style.display = "none";
+    document.getElementById('probabilityResult').style.display = "none";
+}
+
 // Function for a single roll
 function regularRoll() {
     document.getElementById('opposedResult').style.display = "none";
