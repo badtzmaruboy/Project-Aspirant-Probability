@@ -75,8 +75,7 @@
 <button type="button" onclick="rollDiceTenTimes()">Roll Dice 10 Times</button>
 <button type="button" onclick="rollTenOpposedDice()">Roll 10 Opposed Dice</button>
 <button type="button" onclick="calculateOpposedProbability()">Opposed Roll Probability</button>
-
-<!-- New "Clear Results" button -->
+<button type="button" onclick="swapInputs()">Swap Inputs</button>
 <button type="button" onclick="clearResults()">Clear Results</button>
 
 <p id="demo"></p>
@@ -91,6 +90,27 @@ function clearResults() {
     document.getElementById('probabilityResult').innerHTML = '';
     document.getElementById('opposedResult').style.display = "none";
     document.getElementById('probabilityResult').style.display = "none";
+}
+
+// Function to swap inputs between the first and second input rows
+function swapInputs() {
+    // Swap Dice Inputs
+    const diceInput1 = document.getElementById('diceInput1').value;
+    const diceInput2 = document.getElementById('diceInput2').value;
+    document.getElementById('diceInput1').value = diceInput2;
+    document.getElementById('diceInput2').value = diceInput1;
+
+    // Swap Outcome Inputs
+    const outcomeInput1 = document.getElementById('outcomeInput1').value;
+    const outcomeInput2 = document.getElementById('outcomeInput2').value;
+    document.getElementById('outcomeInput1').value = outcomeInput2;
+    document.getElementById('outcomeInput2').value = outcomeInput1;
+
+    // Swap Damage Inputs
+    const damageInput1 = document.getElementById('damageInput1').value;
+    const damageInput2 = document.getElementById('damageInput2').value;
+    document.getElementById('damageInput1').value = damageInput2;
+    document.getElementById('damageInput2').value = damageInput1;
 }
 
 // Function for a single roll
