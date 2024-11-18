@@ -173,37 +173,35 @@ function opposedRoll() {
     const weaponLabel1 = label1Parts.join(' ') || "Weapon";
 
     // Extract defender's armor
-    const defenderArmor = parseInt(document.getElementById('armorInput').value) || 0;
+    const defenderArmor = parseInt(document.getElementById('armorInput2').value) || 0;
 
-    let roll1 = parseAndRoll(input1, outcome1, `${weaponDamage1} ${weaponLabel1}`);
-    let roll2 = parseAndRoll(input2, outcome2);
+    let roll1 = parseAndRoll(input1, outcome1, `${weaponDamage1} ${weaponLabel1}`); // Attacker roll
+    let roll2 = parseAndRoll(input2, outcome2); // Defender roll
 
-    let label1 = extractLabel(input1) || "First Roll"; // Attacker's label
-    let label2 = extractLabel(input2) || "Second Roll"; // Defender's label
-    let result1 = extractResultValue(roll1); // Attacker's roll result
-    let result2 = extractResultValue(roll2); // Defender's roll result
+    const label1 = extractLabel(input1) || "Attacker"; // Attacker's label
+    const label2 = extractLabel(input2) || "Defender"; // Defender's label
+    const result1 = extractResultValue(roll1); // Attacker's roll result
+    const result2 = extractResultValue(roll2); // Defender's roll result
 
-    let opposedResult = Math.max(0, result1 - result2); // Calculate opposed result
-    let attackDamage = opposedResult + weaponDamage1; // Calculate attack damage
-    let levelXWound = Math.max(0, attackDamage - defenderArmor); // Calculate Level X Wound based on defender's armor
+    const opposedResult = Math.max(0, result1 - result2); // Adjust attacker's result based on defender's roll
+    const attackDamage = Math.max(0, opposedResult + weaponDamage1); // Calculate attack damage
+    const levelXWound = Math.max(0, attackDamage - defenderArmor); // Calculate Level X Wound based on defender's armor
 
-    // Determine the winner and display the outcome
-    let winnerMessage;
-    if (result1 > result2) {
-        // Attacker wins
-        winnerMessage = `${label1} wins by ${opposedResult} Opposed Result and does ${attackDamage} Attack Damage (${levelXWound} Level X Wound after ${label2}'s armor).`;
-    } else if (result2 > result1) {
-        // Defender wins (no damage dealt)
-        winnerMessage = `${label2} wins by ${opposedResult} Opposed Result. No damage dealt.`;
+    let message = "";
+    if (opposedResult === 0) {
+        // If the adjusted result is 0, the attack fails completely
+        message = `${label2} completely Dodged (or Defended) against ${label1}. No damage was dealt.`;
     } else {
-        // Tie (no damage dealt)
-        winnerMessage = "It's a tie! No damage dealt.";
+        // Otherwise, calculate the final damage and wound level
+        message = `${label2} reduced ${label1}'s effective result to ${opposedResult}. Final attack damage: ${attackDamage} (${levelXWound} Level X Wound after armor).`;
     }
 
+    // Display the result
     document.getElementById('opposedResult').innerHTML = `
         <strong>${label1}:</strong> ${roll1} <br>
         <strong>${label2}:</strong> ${roll2} <br>
-        <strong>${winnerMessage}</strong>
+        <strong>${message}</strong><br>
+        Attack Damage dealt with ${weaponLabel1}.
     `;
     document.getElementById('opposedResult').style.display = "block";
 }
@@ -229,8 +227,6 @@ function rollDiceTenTimes() {
 }
 
 function rollTenOpposedDice() {
-    let results = "";
-
     const input1 = document.getElementById('diceInput1').value; // Attacker's roll
     const input2 = document.getElementById('diceInput2').value; // Defender's roll
     const outcome1 = parseInt(document.getElementById('outcomeInput1').value) || 0; // Attacker's outcome
@@ -242,39 +238,41 @@ function rollTenOpposedDice() {
     const weaponLabel1 = label1Parts.join(' ') || "Weapon";
 
     // Extract defender's armor
-    const defenderArmor = parseInt(document.getElementById('armorInput').value) || 0;
+    const defenderArmor = parseInt(document.getElementById('armorInput2').value) || 0;
+
+    let results = ""; // Store results of all 10 attempts
 
     for (let i = 0; i < 10; i++) {
-        let roll1 = parseAndRoll(input1, outcome1, `${weaponDamage1} ${weaponLabel1}`);
-        let roll2 = parseAndRoll(input2, outcome2);
+        let roll1 = parseAndRoll(input1, outcome1, `${weaponDamage1} ${weaponLabel1}`); // Attacker roll
+        let roll2 = parseAndRoll(input2, outcome2); // Defender roll
 
-        let label1 = extractLabel(input1) || "First Roll"; // Attacker's label
-        let label2 = extractLabel(input2) || "Second Roll"; // Defender's label
-        let result1 = extractResultValue(roll1); // Attacker's roll result
-        let result2 = extractResultValue(roll2); // Defender's roll result
+        const label1 = extractLabel(input1) || "Attacker"; // Attacker's label
+        const label2 = extractLabel(input2) || "Defender"; // Defender's label
+        const result1 = extractResultValue(roll1); // Attacker's roll result
+        const result2 = extractResultValue(roll2); // Defender's roll result
 
-        let opposedResult = Math.max(0, result1 - result2); // Calculate opposed result
-        let attackDamage = opposedResult + weaponDamage1; // Calculate attack damage
-        let levelXWound = Math.max(0, attackDamage - defenderArmor); // Calculate Level X Wound based on defender's armor
+        const opposedResult = Math.max(0, result1 - result2); // Adjust attacker's result based on defender's roll
+        const attackDamage = Math.max(0, opposedResult + weaponDamage1); // Calculate attack damage
+        const levelXWound = Math.max(0, attackDamage - defenderArmor); // Calculate Level X Wound based on defender's armor
 
-        let winnerMessage;
-        if (result1 > result2) {
-            // Attacker wins
-            winnerMessage = `${label1} wins by ${opposedResult} Opposed Result and does ${attackDamage} Attack Damage (${levelXWound} Level X Wound after ${label2}'s armor).`;
-        } else if (result2 > result1) {
-            // Defender wins (no damage dealt)
-            winnerMessage = `${label2} wins by ${opposedResult} Opposed Result. No damage dealt.`;
+        let message = "";
+        if (opposedResult === 0) {
+            // If the adjusted result is 0, the attack fails completely
+            message = `${label2} completely Dodged (or Defended) against ${label1}. No damage was dealt.`;
         } else {
-            // Tie (no damage dealt)
-            winnerMessage = "It's a tie! No damage dealt.";
+            // Otherwise, calculate the final damage and wound level
+            message = `${label2} reduced ${label1}'s effective result to ${opposedResult}. Final attack damage: ${attackDamage} (${levelXWound} Level X Wound after armor).`;
         }
 
+        // Append this attempt's result to the results string
         results += `<strong>Attempt ${i + 1}:</strong><br>
             <strong>${label1}:</strong> ${roll1} <br>
             <strong>${label2}:</strong> ${roll2} <br>
-            <strong>${winnerMessage}</strong><br><br>`;
+            <strong>${message}</strong><br>
+            Attack Damage dealt with ${weaponLabel1}.<br><br>`;
     }
 
+    // Display all 10 results
     document.getElementById('opposedResult').innerHTML = results;
     document.getElementById('opposedResult').style.display = "block";
 }
@@ -598,27 +596,30 @@ function dodgeOrDefend() {
     let roll1 = parseAndRoll(input1, outcome1, `${weaponDamage1} ${weaponLabel1}`); // Attacker roll
     let roll2 = parseAndRoll(input2, outcome2); // Defender roll
 
-    let result1 = extractResultValue(roll1); // Attacker's roll result
-    let result2 = extractResultValue(roll2); // Defender's roll result
+    const label1 = extractLabel(input1) || "Attacker"; // Attacker's label
+    const label2 = extractLabel(input2) || "Defender"; // Defender's label
+    const result1 = extractResultValue(roll1); // Attacker's roll result
+    const result2 = extractResultValue(roll2); // Defender's roll result
 
-    let adjustedResult = Math.max(0, result1 - result2); // Adjust attacker's result based on defender's roll
-    let attackDamage = Math.max(0, adjustedResult + weaponDamage1); // Calculate attack damage
-    let levelXWound = Math.max(0, attackDamage - defenderArmor); // Calculate Level X Wound based on defender's armor
+    const adjustedResult = Math.max(0, result1 - result2); // Adjust attacker's result based on defender's roll
+    const attackDamage = Math.max(0, adjustedResult + weaponDamage1); // Calculate attack damage
+    const levelXWound = Math.max(0, attackDamage - defenderArmor); // Calculate Level X Wound based on defender's armor
 
     let message = "";
     if (adjustedResult === 0) {
         // If the adjusted result is 0, the attack fails completely
-        message = `Defender completely Dodged (or Defended) against the attack. No damage was dealt.`;
+        message = `${label2} completely Dodged (or Defended) against ${label1}. No damage was dealt.`;
     } else {
         // Otherwise, calculate the final damage and wound level
-        message = `Defender reduced the attacker's effective result to ${adjustedResult}. Final attack damage: ${attackDamage} (${levelXWound} Level X Wound after armor).`;
+        message = `${label2} reduced ${label1}'s effective result to ${adjustedResult}. Final attack damage: ${attackDamage} (${levelXWound} Level X Wound after armor).`;
     }
 
     // Display the result
     document.getElementById('opposedResult').innerHTML = `
-        <strong>Attacker:</strong> ${roll1} <br>
-        <strong>Defender:</strong> ${roll2} <br>
-        <strong>${message}</strong>
+        <strong>${label1}:</strong> ${roll1} <br>
+        <strong>${label2}:</strong> ${roll2} <br>
+        <strong>${message}</strong><br>
+        Attack Damage dealt with ${weaponLabel1}.
     `;
     document.getElementById('opposedResult').style.display = "block";
 }
@@ -643,27 +644,30 @@ function dodgeOrDefendTenTimes() {
         let roll1 = parseAndRoll(input1, outcome1, `${weaponDamage1} ${weaponLabel1}`); // Attacker roll
         let roll2 = parseAndRoll(input2, outcome2); // Defender roll
 
-        let result1 = extractResultValue(roll1); // Attacker's roll result
-        let result2 = extractResultValue(roll2); // Defender's roll result
+        const label1 = extractLabel(input1) || "Attacker"; // Attacker's label
+        const label2 = extractLabel(input2) || "Defender"; // Defender's label
+        const result1 = extractResultValue(roll1); // Attacker's roll result
+        const result2 = extractResultValue(roll2); // Defender's roll result
 
-        let adjustedResult = Math.max(0, result1 - result2); // Adjust attacker's result based on defender's roll
-        let attackDamage = Math.max(0, adjustedResult + weaponDamage1); // Calculate attack damage
-        let levelXWound = Math.max(0, attackDamage - defenderArmor); // Calculate Level X Wound based on defender's armor
+        const adjustedResult = Math.max(0, result1 - result2); // Adjust attacker's result based on defender's roll
+        const attackDamage = Math.max(0, adjustedResult + weaponDamage1); // Calculate attack damage
+        const levelXWound = Math.max(0, attackDamage - defenderArmor); // Calculate Level X Wound based on defender's armor
 
         let message = "";
         if (adjustedResult === 0) {
             // If the adjusted result is 0, the attack fails completely
-            message = `Defender completely Dodged (or Defended) against the attack. No damage was dealt.`;
+            message = `${label2} completely Dodged (or Defended) against ${label1}. No damage was dealt.`;
         } else {
             // Otherwise, calculate the final damage and wound level
-            message = `Defender reduced the attacker's effective result to ${adjustedResult}. Final attack damage: ${attackDamage} (${levelXWound} Level X Wound after armor).`;
+            message = `${label2} reduced ${label1}'s effective result to ${adjustedResult}. Final attack damage: ${attackDamage} (${levelXWound} Level X Wound after armor).`;
         }
 
         // Append this attempt's result to the results string
         results += `<strong>Attempt ${i + 1}:</strong><br>
-            <strong>Attacker:</strong> ${roll1} <br>
-            <strong>Defender:</strong> ${roll2} <br>
-            <strong>${message}</strong><br><br>`;
+            <strong>${label1}:</strong> ${roll1} <br>
+            <strong>${label2}:</strong> ${roll2} <br>
+            <strong>${message}</strong><br>
+            Attack Damage dealt with ${weaponLabel1}.<br><br>`;
     }
 
     // Display all 10 results
