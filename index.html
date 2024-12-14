@@ -143,9 +143,16 @@ function parseAndRoll(input, outcomeInput = "0", damageInput = "0", showAttackDa
     let [dicePart, ...labelParts] = input.split(' ');
     let label = labelParts.join(' ') || "";
     let [numDiceStr, difficultyStr] = dicePart.split('@');
-    
+
     let numDice = parseInt(numDiceStr) || 1;
     let difficulty = difficultyStr ? parseInt(difficultyStr) : 7;
+
+    // Adjust dice count and difficulty
+    if (difficulty > 10) {
+        numDice = Math.max(0, numDice - (difficulty - 10)); // Reduce dice by difficulty past 10
+        difficulty = 10; // Cap difficulty at 10
+    }
+
     let outcome = parseInt(outcomeInput) || 0;
     let [damageValue, ...weaponLabelParts] = damageInput.split(' ');
     let weaponDamage = parseInt(damageValue) || 0;
@@ -481,6 +488,12 @@ function simulateCumulativeOutcomeProbabilities(numDice, difficulty, outcome) {
 
 // Simulate a single roll with system rules for Exploding or +2
 function simulateSingleRoll(numDice, difficulty) {
+    // Adjust dice count and difficulty for high difficulty levels
+    if (difficulty > 10) {
+        numDice = Math.max(0, numDice - (difficulty - 10)); // Reduce dice by difficulty past 10
+        difficulty = 10; // Cap difficulty at 10
+    }
+
     let tally = 0;
     const system = document.getElementById('system').value; // Check selected system
 
@@ -495,7 +508,7 @@ function simulateSingleRoll(numDice, difficulty) {
                 // Exploding system: count as a success and roll one additional die
                 tally += 1;
                 let extraRoll = Math.floor(Math.random() * 10) + 1;
-                
+
                 // If the extra roll meets the difficulty threshold, add another success
                 if (extraRoll >= difficulty) {
                     tally += 1;
