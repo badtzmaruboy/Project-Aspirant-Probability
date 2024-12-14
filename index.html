@@ -145,7 +145,7 @@ function parseAndRoll(input, outcomeInput = "0", damageInput = "0", showAttackDa
     let [numDiceStr, difficultyStr] = dicePart.split('@');
     
     let numDice = parseInt(numDiceStr) || 1;
-    let difficulty = difficultyStr ? parseInt(difficultyStr) : 6;
+    let difficulty = difficultyStr ? parseInt(difficultyStr) : 7;
     let outcome = parseInt(outcomeInput) || 0;
     let [damageValue, ...weaponLabelParts] = damageInput.split(' ');
     let weaponDamage = parseInt(damageValue) || 0;
