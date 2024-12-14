@@ -426,7 +426,7 @@ function calculateExactProbability() {
     const input = removeLabel(document.getElementById('diceInput1').value);
     const [numDiceStr, difficultyStr] = input.split('@');
     const numDice = parseInt(numDiceStr) || 1;
-    const difficulty = difficultyStr ? parseInt(difficultyStr) : 6;
+    const difficulty = difficultyStr ? parseInt(difficultyStr) : 7;
     const outcomes = simulateExactOutcomeProbabilities(numDice, difficulty);
     displayProbabilityResults(outcomes, "Exact Outcome Probability Distribution (Bell Curve)");
 }
@@ -435,7 +435,7 @@ function calculateCumulativeProbability() {
     const input = removeLabel(document.getElementById('diceInput1').value);
     const [numDiceStr, difficultyStr] = input.split('@');
     const numDice = parseInt(numDiceStr) || 1;
-    const difficulty = difficultyStr ? parseInt(difficultyStr) : 6;
+    const difficulty = difficultyStr ? parseInt(difficultyStr) : 7;
     const cumulativeProbabilities = simulateCumulativeOutcomeProbabilities(numDice, difficulty);
     displayProbabilityResults(cumulativeProbabilities, "Cumulative Probability Distribution (At least X Outcome)");
 }
