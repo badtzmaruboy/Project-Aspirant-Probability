@@ -421,48 +421,54 @@ function calculateOpposedProbability() {
     document.getElementById('probabilityResult').style.display = "block";
 }
 
-// Probability-related functions, independent of any other features
+// Modified calculateExactProbability to include outcome
 function calculateExactProbability() {
     const input = removeLabel(document.getElementById('diceInput1').value);
     const [numDiceStr, difficultyStr] = input.split('@');
     const numDice = parseInt(numDiceStr) || 1;
     const difficulty = difficultyStr ? parseInt(difficultyStr) : 7;
-    const outcomes = simulateExactOutcomeProbabilities(numDice, difficulty);
+    const outcome = parseInt(document.getElementById('outcomeInput1').value) || 0;
+    const outcomes = simulateExactOutcomeProbabilities(numDice, difficulty, outcome);
     displayProbabilityResults(outcomes, "Exact Outcome Probability Distribution (Bell Curve)");
 }
 
+// Modified calculateCumulativeProbability to include outcome
 function calculateCumulativeProbability() {
     const input = removeLabel(document.getElementById('diceInput1').value);
     const [numDiceStr, difficultyStr] = input.split('@');
     const numDice = parseInt(numDiceStr) || 1;
     const difficulty = difficultyStr ? parseInt(difficultyStr) : 7;
-    const cumulativeProbabilities = simulateCumulativeOutcomeProbabilities(numDice, difficulty);
+    const outcome = parseInt(document.getElementById('outcomeInput1').value) || 0;
+    const cumulativeProbabilities = simulateCumulativeOutcomeProbabilities(numDice, difficulty, outcome);
     displayProbabilityResults(cumulativeProbabilities, "Cumulative Probability Distribution (At least X Outcome)");
 }
 
-// Probability Simulation Functions
-function simulateExactOutcomeProbabilities(numDice, difficulty) {
+// Modified simulateExactOutcomeProbabilities to include outcome
+function simulateExactOutcomeProbabilities(numDice, difficulty, outcome) {
     const trials = 10000;
     const outcomes = {};
 
     for (let i = 0; i < trials; i++) {
-        const outcome = simulateSingleRoll(numDice, difficulty);
-        outcomes[outcome] = (outcomes[outcome] || 0) + 1;
+        const baseOutcome = simulateSingleRoll(numDice, difficulty);
+        const finalOutcome = baseOutcome + outcome; // Add the outcome adjustment
+        outcomes[finalOutcome] = (outcomes[finalOutcome] || 0) + 1;
     }
 
-    for (let outcome in outcomes) {
-        outcomes[outcome] = (outcomes[outcome] / trials * 100).toFixed(2);
+    for (let finalOutcome in outcomes) {
+        outcomes[finalOutcome] = (outcomes[finalOutcome] / trials * 100).toFixed(2);
     }
     return outcomes;
 }
 
-function simulateCumulativeOutcomeProbabilities(numDice, difficulty) {
+// Modified simulateCumulativeOutcomeProbabilities to include outcome
+function simulateCumulativeOutcomeProbabilities(numDice, difficulty, outcome) {
     const trials = 10000;
     const cumulativeCounts = {};
 
     for (let i = 0; i < trials; i++) {
-        const outcome = simulateSingleRoll(numDice, difficulty);
-        for (let target = outcome; target >= -5; target--) {
+        const baseOutcome = simulateSingleRoll(numDice, difficulty);
+        const finalOutcome = baseOutcome + outcome; // Add the outcome adjustment
+        for (let target = finalOutcome; target >= -5; target--) {
             cumulativeCounts[target] = (cumulativeCounts[target] || 0) + 1;
         }
     }
