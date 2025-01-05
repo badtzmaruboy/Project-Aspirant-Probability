@@ -147,13 +147,15 @@ function parseAndRoll(input, outcomeInput = "0", damageInput = "0", showAttackDa
     let numDice = parseInt(numDiceStr) || 1;
     let difficulty = difficultyStr ? parseInt(difficultyStr) : 7;
 
-    // Adjust dice count and difficulty
+    // Adjust the +Outcome based on the Difficulty deviation from 7
+    let outcomeAdjustment = difficulty - 7;
+    let outcome = (parseInt(outcomeInput) || 0) - outcomeAdjustment;
+
+    // Remove dice adjustment for difficulty above 10
     if (difficulty > 10) {
-        numDice = Math.max(0, numDice - (difficulty - 10)); // Reduce dice by difficulty past 10
-        difficulty = 10; // Cap difficulty at 10
+        difficulty = 10; // Cap the difficulty at 10 without reducing dice
     }
 
-    let outcome = parseInt(outcomeInput) || 0;
     let [damageValue, ...weaponLabelParts] = damageInput.split(' ');
     let weaponDamage = parseInt(damageValue) || 0;
     let weaponLabel = weaponLabelParts.join(' ') || "Weapon";
@@ -428,29 +430,82 @@ function calculateOpposedProbability() {
     document.getElementById('probabilityResult').style.display = "block";
 }
 
-// Modified calculateExactProbability to include outcome
+// Modified calculateExactProbability to include difficulty adjustment
 function calculateExactProbability() {
     const input = removeLabel(document.getElementById('diceInput1').value);
     const [numDiceStr, difficultyStr] = input.split('@');
     const numDice = parseInt(numDiceStr) || 1;
     const difficulty = difficultyStr ? parseInt(difficultyStr) : 7;
     const outcome = parseInt(document.getElementById('outcomeInput1').value) || 0;
-    const outcomes = simulateExactOutcomeProbabilities(numDice, difficulty, outcome);
+
+    // Adjust outcome for difficulty deviation from 7
+    const adjustedOutcome = outcome - (difficulty - 7);
+
+    const outcomes = simulateExactOutcomeProbabilities(numDice, difficulty, adjustedOutcome);
     displayProbabilityResults(outcomes, "Exact Outcome Probability Distribution (Bell Curve)");
 }
 
-// Modified calculateCumulativeProbability to include outcome
+// Modified calculateCumulativeProbability to include difficulty adjustment
 function calculateCumulativeProbability() {
     const input = removeLabel(document.getElementById('diceInput1').value);
     const [numDiceStr, difficultyStr] = input.split('@');
     const numDice = parseInt(numDiceStr) || 1;
     const difficulty = difficultyStr ? parseInt(difficultyStr) : 7;
     const outcome = parseInt(document.getElementById('outcomeInput1').value) || 0;
-    const cumulativeProbabilities = simulateCumulativeOutcomeProbabilities(numDice, difficulty, outcome);
+
+    // Adjust outcome for difficulty deviation from 7
+    const adjustedOutcome = outcome - (difficulty - 7);
+
+    const cumulativeProbabilities = simulateCumulativeOutcomeProbabilities(numDice, difficulty, adjustedOutcome);
     displayProbabilityResults(cumulativeProbabilities, "Cumulative Probability Distribution (At least X Outcome)");
 }
 
-// Modified simulateExactOutcomeProbabilities to include outcome
+// Modified calculateOpposedProbability to include difficulty adjustment
+function calculateOpposedProbability() {
+    const trials = 10000;
+    const input1 = document.getElementById('diceInput1').value;
+    const input2 = document.getElementById('diceInput2').value;
+    const outcome1 = parseInt(document.getElementById('outcomeInput1').value) || 0;
+    const outcome2 = parseInt(document.getElementById('outcomeInput2').value) || 0;
+
+    const [numDice1, difficulty1] = input1.split('@').map(Number);
+    const [numDice2, difficulty2] = input2.split('@').map(Number);
+
+    // Adjust outcomes based on difficulty deviation from 7
+    const adjustedOutcome1 = outcome1 - (difficulty1 - 7);
+    const adjustedOutcome2 = outcome2 - (difficulty2 - 7);
+
+    let aWins = 0;
+    let bWins = 0;
+    let ties = 0;
+
+    for (let i = 0; i < trials; i++) {
+        const roll1 = simulateSingleRoll(numDice1, difficulty1) + adjustedOutcome1;
+        const roll2 = simulateSingleRoll(numDice2, difficulty2) + adjustedOutcome2;
+
+        if (roll1 > roll2) {
+            aWins++;
+        } else if (roll2 > roll1) {
+            bWins++;
+        } else {
+            ties++;
+        }
+    }
+
+    const aWinProbability = ((aWins / trials) * 100).toFixed(2);
+    const bWinProbability = ((bWins / trials) * 100).toFixed(2);
+    const tieProbability = ((ties / trials) * 100).toFixed(2);
+
+    document.getElementById('probabilityResult').innerHTML = `
+        <strong>Opposed Roll Probability:</strong><br>
+        First Roll Wins: ${aWinProbability}%<br>
+        Second Roll Wins: ${bWinProbability}%<br>
+        It's a Tie: ${tieProbability}%<br>
+    `;
+    document.getElementById('probabilityResult').style.display = "block";
+}
+
+// Simulate exact outcome probabilities with difficulty adjustment
 function simulateExactOutcomeProbabilities(numDice, difficulty, outcome) {
     const trials = 10000;
     const outcomes = {};
@@ -467,7 +522,7 @@ function simulateExactOutcomeProbabilities(numDice, difficulty, outcome) {
     return outcomes;
 }
 
-// Modified simulateCumulativeOutcomeProbabilities to include outcome
+// Simulate cumulative outcome probabilities with difficulty adjustment
 function simulateCumulativeOutcomeProbabilities(numDice, difficulty, outcome) {
     const trials = 10000;
     const cumulativeCounts = {};
