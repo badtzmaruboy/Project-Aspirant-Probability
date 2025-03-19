@@ -664,7 +664,7 @@ function rollDice(numDice, floor, outcome, weaponDamage, label) {
         let roll = Math.floor(Math.random() * 10) + 1;
 
         if (roll === 10 && system === "exploding") {
-            // Start explosion chain
+            // Explosion chain
             let chain = ['10'];
             tally += 1;
 
@@ -681,28 +681,35 @@ function rollDice(numDice, floor, outcome, weaponDamage, label) {
                 }
             }
 
-            results.push(chain.join(' '));
+            results.push({ display: chain.join(' '), sortValue: 10 });
         }
         else if (roll === 10 && system === "+2") {
             tally += 2;
-            results.push("10");
+            results.push({ display: "10", sortValue: 10 });
         }
         else if (roll >= floor) {
             tally += 1;
-            results.push(roll);
+            results.push({ display: `${roll}`, sortValue: roll });
         }
         else if (roll === 1) {
             tally -= 1;
-            results.push(roll);
+            results.push({ display: `${roll}`, sortValue: 1 });
         }
         else {
-            results.push(roll);
+            results.push({ display: `${roll}`, sortValue: roll });
         }
     }
 
+    // Sort by sortValue (base roll)
+    results.sort((a, b) => a.sortValue - b.sortValue);
+
+    // Convert back to display text
+    const rollText = results.map(r => r.display).join(", ");
     const resultWithOutcome = tally + outcome;
-    return `${label ? `<strong>${label}</strong><br>` : ''}Rolls: ${results.join(", ")} <br> Result: ${resultWithOutcome} (${tally} + ${outcome})`;
+
+    return `${label ? `<strong>${label}</strong><br>` : ''}Rolls: ${rollText} <br> Result: ${resultWithOutcome} (${tally} + ${outcome})`;
 }
+
 
 function toggleExactProbability() {
     const probabilityElement = document.getElementById("probabilityResult");
