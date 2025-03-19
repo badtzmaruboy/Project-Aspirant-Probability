@@ -145,10 +145,10 @@ function parseAndRoll(input, outcomeInput = "0", damageInput = "0", showAttackDa
     let [numDiceStr, difficultyStr] = dicePart.split('@');
 
     let numDice = parseInt(numDiceStr) || 1;
-    let difficulty = difficultyStr ? parseInt(difficultyStr) : 7;
+    let difficulty = difficultyStr ? parseInt(difficultyStr) : 6;
 
     // Adjust the +Outcome based on the Difficulty deviation from 7
-    let outcomeAdjustment = difficulty - 7;
+    let outcomeAdjustment = difficulty - 6;
     let outcome = (parseInt(outcomeInput) || 0) - outcomeAdjustment;
 
     // Remove dice adjustment for difficulty above 10
@@ -435,11 +435,11 @@ function calculateExactProbability() {
     const input = removeLabel(document.getElementById('diceInput1').value);
     const [numDiceStr, difficultyStr] = input.split('@');
     const numDice = parseInt(numDiceStr) || 1;
-    const difficulty = difficultyStr ? parseInt(difficultyStr) : 7;
+    const difficulty = difficultyStr ? parseInt(difficultyStr) : 6;
     const outcome = parseInt(document.getElementById('outcomeInput1').value) || 0;
 
     // Adjust outcome for difficulty deviation from 7
-    const adjustedOutcome = outcome - (difficulty - 7);
+    const adjustedOutcome = outcome - (difficulty - 6);
 
     const outcomes = simulateExactOutcomeProbabilities(numDice, difficulty, adjustedOutcome);
     displayProbabilityResults(outcomes, "Exact Outcome Probability Distribution (Bell Curve)");
@@ -450,11 +450,11 @@ function calculateCumulativeProbability() {
     const input = removeLabel(document.getElementById('diceInput1').value);
     const [numDiceStr, difficultyStr] = input.split('@');
     const numDice = parseInt(numDiceStr) || 1;
-    const difficulty = difficultyStr ? parseInt(difficultyStr) : 7;
+    const difficulty = difficultyStr ? parseInt(difficultyStr) : 6;
     const outcome = parseInt(document.getElementById('outcomeInput1').value) || 0;
 
     // Adjust outcome for difficulty deviation from 7
-    const adjustedOutcome = outcome - (difficulty - 7);
+    const adjustedOutcome = outcome - (difficulty - 6);
 
     const cumulativeProbabilities = simulateCumulativeOutcomeProbabilities(numDice, difficulty, adjustedOutcome);
     displayProbabilityResults(cumulativeProbabilities, "Cumulative Probability Distribution (At least X Outcome)");
@@ -470,16 +470,16 @@ function calculateOpposedProbability() {
     // Parse number of dice and difficulty from input1
     const [numDice1Str, difficulty1Str] = input1.split('@');
     const numDice1 = parseInt(numDice1Str) || 0;
-    const difficulty1 = parseInt(difficulty1Str) || 7;
+    const difficulty1 = parseInt(difficulty1Str) || 6;
 
     // Parse number of dice and difficulty from input2
     const [numDice2Str, difficulty2Str] = input2.split('@');
     const numDice2 = parseInt(numDice2Str) || 0;
-    const difficulty2 = parseInt(difficulty2Str) || 7;
+    const difficulty2 = parseInt(difficulty2Str) || 6;
 
     // Adjust outcomes based on difficulty deviation from 7
-    const adjustedOutcome1 = outcome1 - (difficulty1 - 7);
-    const adjustedOutcome2 = outcome2 - (difficulty2 - 7);
+    const adjustedOutcome1 = outcome1 - (difficulty1 - 6);
+    const adjustedOutcome2 = outcome2 - (difficulty2 - 6);
 
     let aWins = 0;
     let bWins = 0;
