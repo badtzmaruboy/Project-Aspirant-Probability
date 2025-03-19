@@ -655,53 +655,52 @@ function displayProbabilityResults(probabilities, title) {
     document.getElementById("probabilityResult").innerHTML = result;
 }
 
-// Helper Functions
 function rollDice(numDice, floor, outcome, weaponDamage, label) {
     let results = [];
     let tally = 0;
-    const system = document.getElementById('system').value; // Check the selected system
+    const system = document.getElementById('system').value;
 
     for (let i = 0; i < numDice; i++) {
-        let roll = Math.floor(Math.random() * 10) + 1; // Roll a d10 (1-10)
+        let roll = Math.floor(Math.random() * 10) + 1;
 
-        if (roll >= floor && roll < 10) {
-            // Regular success if roll meets difficulty and is not a 10
+        if (roll === 10 && system === "exploding") {
+            // Start explosion chain
+            let chain = ['10'];
             tally += 1;
-            results.push(roll); // Add regular roll to results
-        } else if (roll === 10) {
-            if (system === "exploding") {
-                // "Exploding" system: count as a success and roll one extra die
-                tally += 1;
-                
-                // Roll an additional die for explosion
-                let extraRoll = Math.floor(Math.random() * 10) + 1;
 
-                // Format result as "10 (extraRoll)" and push to results array
-                if (extraRoll >= floor) {
-                    results.push(`10 (${extraRoll})`);
-                    tally += 1; // Add success for the extra roll if it meets the difficulty
+            let exploding = true;
+            while (exploding) {
+                const extraRoll = Math.floor(Math.random() * 10) + 1;
+                chain.push(`(${extraRoll})`);
+                if (extraRoll === 10) {
+                    tally += 1;
                 } else {
-                    results.push(`10 (${extraRoll})`); // Display the explosion result even if it doesn't meet difficulty
+                    if (extraRoll >= floor) tally += 1;
+                    if (extraRoll === 1) tally -= 1;
+                    exploding = false;
                 }
-            } else if (system === "+2") {
-                // "+2 for 10s" system: count as two successes
-                tally += 2;
-                results.push("10"); // Display regular 10 without explosion
             }
-        } else if (roll === 1) {
-            // Roll of 1 decreases tally
+
+            results.push(chain.join(' '));
+        }
+        else if (roll === 10 && system === "+2") {
+            tally += 2;
+            results.push("10");
+        }
+        else if (roll >= floor) {
+            tally += 1;
+            results.push(roll);
+        }
+        else if (roll === 1) {
             tally -= 1;
-            results.push(roll); // Add roll of 1 to results
-        } else {
-            // Add any other roll to results
+            results.push(roll);
+        }
+        else {
             results.push(roll);
         }
     }
 
-    // Calculate the final result including any outcome modifiers
     const resultWithOutcome = tally + outcome;
-
-    // Display the results with the label if provided
     return `${label ? `<strong>${label}</strong><br>` : ''}Rolls: ${results.join(", ")} <br> Result: ${resultWithOutcome} (${tally} + ${outcome})`;
 }
 
